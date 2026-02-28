@@ -417,6 +417,7 @@
       background: var(--accent-glow); color: var(--accent); font-weight: 600;
     }
     .wallet-option-badge.new { background: var(--green-dim); color: var(--green); }
+    .wallet-option-badge.installed { background: var(--green-dim); color: var(--green); }
 
     .modal-divider {
       display: flex; align-items: center; gap: 12px;
@@ -787,7 +788,7 @@
           <div class="wallet-option-name">OP_WALLET</div>
           <div class="wallet-option-desc">Native OP_NET wallet with smart contract support</div>
         </div>
-        <div class="wallet-option-badge">Recommended</div>
+        <div class="wallet-option-badge" id="badge-opwallet">Recommended</div>
       </div>
 
       <div class="wallet-option" onclick="connectWallet('unisat')">
@@ -796,7 +797,7 @@
           <div class="wallet-option-name">UniSat Wallet</div>
           <div class="wallet-option-desc">Popular Bitcoin wallet with Taproot support</div>
         </div>
-        <div class="wallet-option-badge new">BTC</div>
+        <div class="wallet-option-badge new" id="badge-unisat">BTC</div>
       </div>
 
       <div class="wallet-option" onclick="connectWallet('xverse')">
@@ -805,6 +806,7 @@
           <div class="wallet-option-name">Xverse Wallet</div>
           <div class="wallet-option-desc">Bitcoin & Stacks wallet, supports BRC-20</div>
         </div>
+        <div class="wallet-option-badge new" id="badge-xverse">BTC</div>
       </div>
 
       <div class="wallet-option" onclick="connectWallet('okx')">
@@ -813,6 +815,7 @@
           <div class="wallet-option-name">OKX Wallet</div>
           <div class="wallet-option-desc">Multi-chain wallet with Bitcoin support</div>
         </div>
+        <div class="wallet-option-badge new" id="badge-okx"></div>
       </div>
 
       <div class="modal-divider">or use address directly</div>
@@ -825,7 +828,7 @@
 
     <div id="walletConnectedView" style="display:none">
       <div class="modal-title">Wallet Connected ✓</div>
-      <div class="modal-sub">You're connected to OPWork via Bitcoin</div>
+      <div class="modal-sub">Connected via <span id="walletTypeName" style="color:var(--accent);font-weight:600">—</span> · OP_NET Bitcoin L1</div>
       <div class="wallet-connected-info">
         <div class="wallet-dot" style="display:inline-block;margin-right:6px"></div>
         <span style="font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase">Connected Address</span>
@@ -1170,11 +1173,15 @@ function showSection(name) {
 // MODALS
 // ─────────────────────────────────────────────
 function openWalletModal() {
+  detectInstalledWallets();
   if (walletState.connected) {
     document.getElementById('walletConnectView').style.display = 'none';
     document.getElementById('walletConnectedView').style.display = 'block';
     document.getElementById('connectedAddress').textContent = walletState.address;
     document.getElementById('connectedBalance').textContent = walletState.balance + ' BTC';
+    const labels = { opwallet:'OP_WALLET', unisat:'UniSat', xverse:'Xverse', okx:'OKX', manual:'Read-only' };
+    const el = document.getElementById('walletTypeName');
+    if (el) el.textContent = labels[walletState.type] || walletState.type;
   } else {
     document.getElementById('walletConnectView').style.display = 'block';
     document.getElementById('walletConnectedView').style.display = 'none';
@@ -1219,57 +1226,220 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 });
 
 // ─────────────────────────────────────────────
-// WALLET LOGIC (simulated OP_NET integration)
+// WALLET LOGIC — Real Extension Detection
+// OP_WALLET injects window.unisat (fork of UniSat)
+// UniSat injects window.unisat
+// Xverse uses window.XverseProviders or window.BitcoinProvider
+// OKX injects window.okxwallet.bitcoin
 // ─────────────────────────────────────────────
-function connectWallet(type) {
+
+// Detect which wallets are installed and update UI badges
+function detectInstalledWallets() {
+  const hasOpnet  = typeof window.opnet  !== 'undefined';
+  const hasUnisat = typeof window.unisat !== 'undefined';
+  const hasXverse = typeof window.XverseProviders !== 'undefined' || typeof window.BitcoinProvider !== 'undefined';
+  const hasOKX    = typeof window.okxwallet !== 'undefined' && typeof window.okxwallet.bitcoin !== 'undefined';
+
+  function setBadge(id, installed, label) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (installed) {
+      el.textContent = '✓ Installed';
+      el.className = 'wallet-option-badge installed';
+    } else {
+      el.textContent = label;
+      el.className = 'wallet-option-badge';
+    }
+  }
+
+  setBadge('badge-opwallet', hasOpnet || hasUnisat, 'Recommended');
+  setBadge('badge-unisat',   hasUnisat && !hasOpnet, 'Install');
+  setBadge('badge-xverse',   hasXverse, 'Install');
+  setBadge('badge-okx',      hasOKX,    'Install');
+}
+
+// Get the right provider object per wallet type
+function getProvider(type) {
+  switch(type) {
+    case 'opwallet': return window.opnet || window.unisat || null;
+    case 'unisat':   return window.unisat || null;
+    case 'xverse':   return (window.XverseProviders && window.XverseProviders.BitcoinProvider) || window.BitcoinProvider || null;
+    case 'okx':      return (window.okxwallet && window.okxwallet.bitcoin) || null;
+    default:         return null;
+  }
+}
+
+async function connectWallet(type) {
   const walletNames = { opwallet:'OP_WALLET', unisat:'UniSat', xverse:'Xverse', okx:'OKX' };
-  // Simulate wallet connection (real integration via window.opnet / window.unisat)
-  const mockAddr = generateMockAddress();
-  const mockBal = (Math.random() * 0.5 + 0.001).toFixed(8);
-  walletState = { connected: true, address: mockAddr, balance: mockBal, type };
-  updateWalletUI();
-  closeModal('walletModal');
-  showToast(`✓`, `${walletNames[type]} connected successfully!`);
-  // Update dashboard if open
-  if (document.getElementById('section-dashboard').style.display !== 'none') {
-    document.getElementById('dashNotConnected').style.display = 'none';
-    document.getElementById('dashConnected').style.display = 'block';
+  const provider = getProvider(type);
+
+  if (!provider) {
+    // Wallet not installed — show install prompt
+    const installUrls = {
+      opwallet: 'https://chromewebstore.google.com/detail/opwallet/pmbjpcmaaladnfpacpmhmnfmpklgbdjb',
+      unisat:   'https://unisat.io/',
+      xverse:   'https://www.xverse.app/',
+      okx:      'https://www.okx.com/web3',
+    };
+    showInstallPrompt(walletNames[type], installUrls[type]);
+    return;
+  }
+
+  try {
+    setWalletLoading(true);
+    let accounts = [];
+
+    if (type === 'opwallet' || type === 'unisat') {
+      // UniSat / OP_WALLET API
+      accounts = await provider.requestAccounts();
+    } else if (type === 'xverse') {
+      // Xverse uses request() with getAddresses
+      const resp = await provider.request({ method: 'getAccounts', params: { purposes: ['payment','ordinals','stacks'] } });
+      accounts = resp?.result?.addresses?.map(a => a.address) || [];
+    } else if (type === 'okx') {
+      const resp = await provider.requestAccounts();
+      accounts = Array.isArray(resp) ? resp : [resp];
+    }
+
+    if (!accounts || accounts.length === 0) throw new Error('No accounts returned');
+
+    const address = accounts[0];
+    let balance = '0.00000000';
+
+    // Fetch balance
+    try {
+      if (type === 'opwallet' || type === 'unisat') {
+        const balSats = await provider.getBalance();
+        // balSats is in satoshis { confirmed, unconfirmed, total }
+        const sats = balSats?.total ?? balSats?.confirmed ?? 0;
+        balance = (sats / 1e8).toFixed(8);
+      } else if (type === 'okx') {
+        const balInfo = await provider.getBalance();
+        balance = balInfo?.total ? (parseInt(balInfo.total) / 1e8).toFixed(8) : '0.00000000';
+      }
+    } catch(e) { /* balance fetch is non-critical */ }
+
+    // Get public key if available
+    let pubkey = '';
+    try {
+      if (type === 'opwallet' || type === 'unisat') {
+        pubkey = await provider.getPublicKey();
+      }
+    } catch(e) {}
+
+    walletState = { connected: true, address, balance, type, pubkey };
+
+    // Listen for account changes
+    try {
+      if (provider.on) {
+        provider.on('accountsChanged', (newAccounts) => {
+          if (newAccounts && newAccounts.length > 0) {
+            walletState.address = newAccounts[0];
+            updateWalletUI();
+          } else {
+            disconnectWallet();
+          }
+        });
+      }
+    } catch(e) {}
+
+    updateWalletUI();
+    closeModal('walletModal');
+    showToast('✓', `${walletNames[type]} connected!`);
+
+    // Update dashboard if open
+    if (document.getElementById('section-dashboard').style.display !== 'none') {
+      document.getElementById('dashNotConnected').style.display = 'none';
+      document.getElementById('dashConnected').style.display = 'block';
+    }
+  } catch(err) {
+    const msg = err?.message || 'Connection rejected';
+    if (msg.toLowerCase().includes('reject') || msg.toLowerCase().includes('cancel') || err?.code === 4001) {
+      showToast('⚠️', 'Connection cancelled by user');
+    } else {
+      showToast('❌', 'Connection failed: ' + msg.slice(0, 60));
+    }
+  } finally {
+    setWalletLoading(false);
   }
 }
 
 function connectManual() {
   const addr = document.getElementById('manualAddress').value.trim();
-  if (!addr || addr.length < 20) { showToast('⚠️','Please enter a valid Bitcoin address'); return; }
-  walletState = { connected: true, address: addr, balance: '0.00000000', type: 'manual' };
+  if (!addr || addr.length < 26) { showToast('⚠️','Please enter a valid Bitcoin address'); return; }
+  walletState = { connected: true, address: addr, balance: '—', type: 'manual', pubkey: '' };
   updateWalletUI();
   closeModal('walletModal');
-  showToast('✓','Wallet address connected!');
+  showToast('✓','Read-only address connected');
 }
 
-function disconnectWallet() {
-  walletState = { connected: false, address: '', balance: '0.00000000', type: '' };
+async function disconnectWallet() {
+  // Some wallets support programmatic disconnect
+  try {
+    const provider = getProvider(walletState.type);
+    if (provider && provider.disconnect) await provider.disconnect();
+  } catch(e) {}
+  walletState = { connected: false, address: '', balance: '0.00000000', type: '', pubkey: '' };
   updateWalletUI();
   closeModal('walletModal');
   showToast('ℹ️','Wallet disconnected');
 }
 
+function setWalletLoading(loading) {
+  const btn = document.getElementById('walletBtn');
+  if (loading) {
+    btn.innerHTML = '<span class="wallet-dot"></span> Connecting...';
+    btn.disabled = true;
+  } else {
+    btn.disabled = false;
+  }
+}
+
 function updateWalletUI() {
   const btn = document.getElementById('walletBtn');
   if (walletState.connected) {
-    const short = walletState.address.slice(0,6)+'...'+walletState.address.slice(-4);
+    const addr = walletState.address;
+    const short = addr.length > 12 ? addr.slice(0,8)+'...'+addr.slice(-6) : addr;
     btn.innerHTML = `<span class="wallet-dot"></span>${short}`;
     btn.className = 'wallet-btn connected';
+    // Also update the connected view inside modal
+    document.getElementById('connectedAddress').textContent = addr;
+    document.getElementById('connectedBalance').textContent = walletState.balance + ' BTC';
   } else {
     btn.innerHTML = '<span>🔗</span> Connect Wallet';
     btn.className = 'wallet-btn disconnected';
   }
 }
 
-function generateMockAddress() {
-  const chars = '0123456789abcdef';
-  let addr = 'bc1p';
-  for(let i=0;i<38;i++) addr += chars[Math.floor(Math.random()*chars.length)];
-  return addr;
+// Show install prompt for missing wallets
+function showInstallPrompt(name, url) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = '📦';
+  document.getElementById('toast-msg').innerHTML = `${name} not installed. <a href="${url}" target="_blank" style="color:var(--accent);text-decoration:underline">Install →</a>`;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 5000);
+}
+
+// Auto-reconnect if previously connected via OP_WALLET / UniSat
+async function autoReconnect() {
+  try {
+    const provider = window.opnet || window.unisat;
+    if (!provider) return;
+    const accounts = await provider.getAccounts(); // non-intrusive (no popup)
+    if (accounts && accounts.length > 0) {
+      const address = accounts[0];
+      let balance = '0.00000000';
+      try {
+        const balSats = await provider.getBalance();
+        const sats = balSats?.total ?? balSats?.confirmed ?? 0;
+        balance = (sats / 1e8).toFixed(8);
+      } catch(e) {}
+      walletState = { connected: true, address, balance, type: window.opnet ? 'opwallet' : 'unisat', pubkey: '' };
+      updateWalletUI();
+      showToast('✅', 'Wallet auto-reconnected');
+    }
+  } catch(e) { /* No previously connected wallet */ }
 }
 
 // ─────────────────────────────────────────────
@@ -1325,6 +1495,8 @@ function showToast(icon, msg) {
 renderJobs(JOBS);
 renderFreelancers();
 renderLiveFeed();
+// Try auto-reconnect on page load
+window.addEventListener('load', () => { autoReconnect(); });
 </script>
 </body>
 </html>
