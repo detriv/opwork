@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPWork — Web3 Freelance on Bitcoin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #080b10;
+      --bg2: #0d1117;
+      --bg3: #111620;
+      --surface: #161c27;
+      --surface2: #1c2333;
+      --border: #232d3e;
+      --border2: #2a3550;
+      --accent: #f7931a;
+      --accent2: #ff6b00;
+      --accent-glow: rgba(247,147,26,0.15);
+      --green: #00d084;
+      --green-dim: rgba(0,208,132,0.12);
+      --blue: #4da6ff;
+      --blue-dim: rgba(77,166,255,0.1);
+      --text: #e8edf5;
+      --text2: #8b95a8;
+      --text3: #545f72;
+      --font: 'Space Grotesk', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* NOISE OVERLAY */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.4;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,11,16,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex; align-items: center; gap: 0; height: 64px;
+    }
+    .nav-logo {
+      font-size: 22px; font-weight: 700;
+      color: var(--text); letter-spacing: -0.5px;
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none;
+    }
+    .nav-logo .btc-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .nav-links {
+      display: flex; gap: 4px; margin-left: 32px;
+    }
+    .nav-links a {
+      color: var(--text2); text-decoration: none;
+      padding: 6px 14px; border-radius: 8px;
+      font-size: 14px; font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); background: var(--surface); }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+    /* WALLET BUTTON */
+    .wallet-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 18px; border-radius: 10px;
+      font-family: var(--font); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+      border: none;
+    }
+    .wallet-btn.disconnected {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000;
+    }
+    .wallet-btn.disconnected:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(247,147,26,0.3); }
+    .wallet-btn.connected {
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text);
+    }
+    .wallet-btn.connected:hover { border-color: var(--accent); }
+    .wallet-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+    /* POST JOB BTN */
+    .post-btn {
+      padding: 8px 18px; border-radius: 10px;
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text); font-family: var(--font);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .post-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* MAIN LAYOUT */
+    main { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; position: relative; z-index: 1; }
+
+    /* HERO */
+    .hero {
+      padding: 72px 0 56px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 20px;
+      background: var(--accent-glow); border: 1px solid rgba(247,147,26,0.3);
+      color: var(--accent); font-size: 12px; font-weight: 600;
+      letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 4vw, 52px);
+      font-weight: 700; line-height: 1.1;
+      letter-spacing: -1.5px; margin-bottom: 20px;
+    }
+    .hero h1 span { 
+      background: linear-gradient(135deg, var(--accent), #ffd700);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p { color: var(--text2); font-size: 17px; line-height: 1.7; margin-bottom: 32px; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      padding: 12px 28px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000; font-family: var(--font); font-size: 15px;
+      font-weight: 700; cursor: pointer; border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(247,147,26,0.35); }
+    .btn-secondary {
+      padding: 12px 28px; border-radius: 12px;
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text); font-family: var(--font); font-size: 15px;
+      font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* HERO STATS */
+    .hero-stats {
+      display: flex; gap: 32px; margin-top: 40px;
+    }
+    .stat { }
+    .stat-val {
+      font-size: 28px; font-weight: 700;
+      font-family: var(--mono); color: var(--accent);
+    }
+    .stat-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* HERO VISUAL */
+    .hero-visual {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative; overflow: hidden;
+    }
+    .hero-visual::before {
+      content: '';
+      position: absolute; top: -50%; right: -20%;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(247,147,26,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .live-feed-title {
+      font-size: 11px; font-weight: 600; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 6px var(--green);
+      animation: pulse 1.5s infinite;
+    }
+    .feed-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+    }
+    .feed-text { flex: 1; color: var(--text2); }
+    .feed-text strong { color: var(--text); }
+    .feed-amount {
+      font-family: var(--mono); font-size: 12px; font-weight: 600;
+      color: var(--green); background: var(--green-dim);
+      padding: 3px 8px; border-radius: 6px;
+    }
+
+    /* SECTION */
+    .section { margin-top: 64px; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .section-title {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+    }
+    .section-sub { color: var(--text3); font-size: 14px; margin-top: 4px; }
+    .view-all {
+      font-size: 14px; color: var(--accent); cursor: pointer;
+      font-weight: 500; text-decoration: none;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .view-all:hover { text-decoration: underline; }
+
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+    }
+    .filter-chip {
+      padding: 6px 16px; border-radius: 20px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text2); transition: all 0.2s;
+    }
+    .filter-chip:hover, .filter-chip.active {
+      border-color: var(--accent); color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    /* SEARCH */
+    .search-bar {
+      position: relative; margin-bottom: 24px;
+    }
+    .search-bar input {
+      width: 100%; padding: 14px 20px 14px 48px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-family: var(--font);
+      font-size: 15px; outline: none; transition: all 0.2s;
+    }
+    .search-bar input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .search-bar input::placeholder { color: var(--text3); }
+    .search-icon {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--text3); font-size: 18px;
+    }
+
+    /* JOB GRID */
+    .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+
+    /* JOB CARD */
+    .job-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px; cursor: pointer;
+      transition: all 0.25s; position: relative; overflow: hidden;
+    }
+    .job-card::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 50%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .job-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    .job-card:hover::before { opacity: 1; }
+
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .card-category {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .cat-dev { background: rgba(77,166,255,0.12); color: var(--blue); }
+    .cat-design { background: rgba(180,88,255,0.12); color: #b458ff; }
+    .cat-marketing { background: rgba(0,208,132,0.12); color: var(--green); }
+    .cat-writing { background: rgba(255,165,0,0.12); color: orange; }
+    .cat-data { background: rgba(255,77,77,0.12); color: #ff4d4d; }
+    
+    .card-verified {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 11px; color: var(--accent); font-weight: 500;
+    }
+
+    .card-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.3px; line-height: 1.4; }
+    .card-desc { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 14px; 
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tag {
+      font-size: 12px; padding: 3px 10px; border-radius: 6px;
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text3);
+    }
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 14px; border-top: 1px solid var(--border);
+    }
+    .card-pay {
+      display: flex; align-items: baseline; gap: 4px;
+    }
+    .pay-amount {
+      font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--accent);
+    }
+    .pay-unit { font-size: 12px; color: var(--text3); }
+    .pay-usd { font-size: 12px; color: var(--text3); margin-left: 4px; }
+    .card-meta {
+      display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text3);
+    }
+    .card-meta span { display: flex; align-items: center; gap: 4px; }
+    .apply-btn {
+      padding: 7px 18px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000; font-family: var(--font); font-size: 13px; font-weight: 700;
+      cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .apply-btn:hover { transform: scale(1.03); box-shadow: 0 4px 16px rgba(247,147,26,0.35); }
+
+    /* FREELANCER CARDS */
+    .freelancers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .freelancer-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; text-align: center;
+      cursor: pointer; transition: all 0.25s;
+    }
+    .freelancer-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .fl-avatar {
+      width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700;
+      border: 2px solid var(--border2);
+    }
+    .fl-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .fl-title { font-size: 12px; color: var(--text3); margin-bottom: 10px; }
+    .fl-rate {
+      font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--accent);
+    }
+    .fl-rate-label { font-size: 11px; color: var(--text3); }
+    .fl-stats { display: flex; justify-content: center; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .fl-stat-val { font-size: 14px; font-weight: 600; font-family: var(--mono); }
+    .fl-stat-label { font-size: 10px; color: var(--text3); }
+    .fl-rating { color: var(--accent); }
+    .fl-tags { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+    .btc-address {
+      font-family: var(--mono); font-size: 10px; color: var(--text3);
+      background: var(--bg3); padding: 4px 8px; border-radius: 6px;
+      margin-top: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* MODAL OVERLAY */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(8,11,16,0.85);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+
+    /* WALLET MODAL */
+    .wallet-modal {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 24px;
+      padding: 36px;
+      width: 100%; max-width: 420px;
+      position: relative;
+      transform: scale(0.95) translateY(20px);
+      transition: all 0.3s;
+    }
+    .modal-overlay.show .wallet-modal { transform: scale(1) translateY(0); }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text2); cursor: pointer; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--bg3); color: var(--text); }
+    .modal-title {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px;
+    }
+    .modal-sub { color: var(--text3); font-size: 14px; margin-bottom: 28px; }
+
+    .wallet-option {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; border-radius: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.2s; margin-bottom: 10px;
+    }
+    .wallet-option:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .wallet-option-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .wallet-option-info { flex: 1; }
+    .wallet-option-name { font-size: 15px; font-weight: 600; }
+    .wallet-option-desc { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .wallet-option-badge {
+      font-size: 10px; padding: 3px 8px; border-radius: 6px;
+      background: var(--accent-glow); color: var(--accent); font-weight: 600;
+    }
+    .wallet-option-badge.new { background: var(--green-dim); color: var(--green); }
+
+    .modal-divider {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--text3); font-size: 12px; margin: 16px 0;
+    }
+    .modal-divider::before, .modal-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* WALLET CONNECTED */
+    .wallet-connected-info {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; margin-bottom: 16px;
+    }
+    .wallet-address-display {
+      font-family: var(--mono); font-size: 13px; color: var(--text);
+      word-break: break-all; margin-top: 8px;
+    }
+    .wallet-balance-display {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+    }
+    .bal-label { font-size: 12px; color: var(--text3); }
+    .bal-val { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--accent); }
+
+    /* JOB DETAIL MODAL */
+    .job-modal {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 24px;
+      width: 100%; max-width: 640px;
+      max-height: 90vh; overflow-y: auto;
+      position: relative;
+      transform: scale(0.95) translateY(20px);
+      transition: all 0.3s;
+    }
+    .modal-overlay.show .job-modal { transform: scale(1) translateY(0); }
+    .job-modal-header {
+      padding: 28px 28px 20px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--surface2);
+      border-radius: 24px 24px 0 0;
+    }
+    .job-modal-body { padding: 24px 28px; }
+    .job-modal-footer {
+      padding: 20px 28px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 12px;
+      position: sticky; bottom: 0; background: var(--surface2);
+      border-radius: 0 0 24px 24px;
+    }
+    .jm-pay-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px 20px; margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .jm-pay-main { }
+    .jm-pay-amount { font-family: var(--mono); font-size: 28px; font-weight: 700; color: var(--accent); }
+    .jm-pay-token { font-size: 14px; color: var(--text3); }
+    .jm-pay-type {
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px;
+      background: var(--green-dim); color: var(--green);
+    }
+    .section-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 10px; }
+    .skills-list { display: flex; gap: 8px; flex-wrap: wrap; }
+    .skill-tag {
+      padding: 6px 14px; border-radius: 8px;
+      background: var(--blue-dim); border: 1px solid rgba(77,166,255,0.2);
+      color: var(--blue); font-size: 13px; font-weight: 500;
+    }
+    .client-info-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px 20px; margin-top: 20px;
+    }
+    .client-row { display: flex; align-items: center; gap: 12px; }
+    .client-avatar-sm {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .client-name-sm { font-size: 14px; font-weight: 600; }
+    .client-meta-sm { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .tx-address {
+      font-family: var(--mono); font-size: 11px; color: var(--text3);
+      background: var(--bg3); padding: 6px 12px; border-radius: 8px;
+      margin-top: 8px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .copy-btn {
+      background: none; border: none; color: var(--accent); cursor: pointer;
+      font-size: 12px; font-family: var(--font); font-weight: 600;
+    }
+    .copy-btn:hover { text-decoration: underline; }
+
+    /* POST JOB MODAL */
+    .post-job-modal {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 24px;
+      width: 100%; max-width: 560px;
+      max-height: 90vh; overflow-y: auto;
+      position: relative;
+      transform: scale(0.95) translateY(20px);
+      transition: all 0.3s;
+    }
+    .modal-overlay.show .post-job-modal { transform: scale(1) translateY(0); }
+    .form-group { margin-bottom: 18px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; display: block; }
+    .form-input, .form-textarea, .form-select {
+      width: 100%; padding: 12px 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: var(--font); font-size: 14px;
+      outline: none; transition: all 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .form-textarea { min-height: 100px; resize: vertical; }
+    .form-select option { background: var(--surface2); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .token-input-wrap {
+      display: flex; align-items: stretch;
+    }
+    .token-input-wrap .form-input { border-radius: 10px 0 0 10px; border-right: none; }
+    .token-select {
+      padding: 12px 14px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 0 10px 10px 0; color: var(--text);
+      font-family: var(--font); font-size: 14px; cursor: pointer;
+      outline: none; transition: all 0.2s; min-width: 90px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 500;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 14px 20px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 500;
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.3s;
+      max-width: 320px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { font-size: 18px; }
+
+    /* OPNET BADGE */
+    .opnet-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; color: var(--accent);
+      padding: 3px 8px; border-radius: 6px;
+      background: var(--accent-glow); border: 1px solid rgba(247,147,26,0.2);
+    }
+    .opnet-live {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 5px var(--green);
+      animation: pulse 1.5s infinite;
+    }
+
+    /* ESCROW SECTION */
+    .escrow-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 12px; padding: 16px 18px;
+      margin-bottom: 16px;
+    }
+    .escrow-title { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+    .escrow-desc { font-size: 12px; color: var(--text3); line-height: 1.6; }
+
+    /* DASHBOARD SECTION */
+    .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
+    .dash-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 20px;
+    }
+    .dash-val { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--accent); }
+    .dash-label { font-size: 12px; color: var(--text3); margin-top: 4px; }
+    .dash-change { font-size: 12px; color: var(--green); margin-top: 8px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+      .jobs-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* ANIMATED GRADIENT LINE */
+    .gradient-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--blue), transparent);
+      margin: 40px 0;
+      animation: gradient-slide 4s linear infinite;
+      background-size: 200% 100%;
+    }
+    @keyframes gradient-slide { 0%{background-position:200%} 100%{background-position:0%} }
+
+    /* TABS */
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+    .tab {
+      padding: 10px 18px; font-size: 14px; font-weight: 500;
+      color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.2s; margin-bottom: -1px;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="btc-icon">₿</div>
+    OPWork
+  </a>
+  <div class="nav-links">
+    <a class="active" onclick="showSection('browse')">Find Work</a>
+    <a onclick="showSection('freelancers')">Find Talent</a>
+    <a onclick="showSection('dashboard')">Dashboard</a>
+  </div>
+  <div class="nav-right">
+    <div class="opnet-badge"><span class="opnet-live"></span> OP_NET Mainnet</div>
+    <button class="post-btn" onclick="openPostJobModal()">+ Post Job</button>
+    <button class="wallet-btn disconnected" id="walletBtn" onclick="openWalletModal()">
+      <span>🔗</span> Connect Wallet
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+  <!-- BROWSE SECTION -->
+  <div id="section-browse">
+    <!-- HERO -->
+    <section class="hero">
+      <div>
+        <div class="hero-tag">🔥 Powered by Bitcoin L1</div>
+        <h1>Hire & Get Hired<br/>on <span>Bitcoin</span></h1>
+        <p>The world's first truly decentralized freelance marketplace. Smart contracts on Bitcoin via OP_NET — no middlemen, instant crypto payments, full transparency.</p>
+        <div class="hero-actions">
+          <button class="btn-primary" onclick="openWalletModal()">Start Earning BTC →</button>
+          <button class="btn-secondary" onclick="openPostJobModal()">Post a Project</button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="stat-val">2.4K+</div>
+            <div class="stat-label">Active Jobs</div>
+          </div>
+          <div class="stat">
+            <div class="stat-val">₿ 184.2</div>
+            <div class="stat-label">Paid Out</div>
+          </div>
+          <div class="stat">
+            <div class="stat-val">8.1K</div>
+            <div class="stat-label">Freelancers</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="live-feed-title"><span class="live-dot"></span> Live Transactions</div>
+        <div id="liveFeed"></div>
+      </div>
+    </section>
+
+    <div class="gradient-line"></div>
+
+    <!-- JOBS -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Open Projects</div>
+          <div class="section-sub">Paid in BTC & OP_20 tokens via escrow smart contract</div>
+        </div>
+        <a class="view-all">View all →</a>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search jobs, skills, or keywords..." oninput="filterJobs()"/>
+      </div>
+
+      <div class="filter-bar" id="filterBar">
+        <div class="filter-chip active" onclick="setFilter('All')">All</div>
+        <div class="filter-chip" onclick="setFilter('Development')">⚡ Development</div>
+        <div class="filter-chip" onclick="setFilter('Design')">🎨 Design</div>
+        <div class="filter-chip" onclick="setFilter('Marketing')">📢 Marketing</div>
+        <div class="filter-chip" onclick="setFilter('Writing')">✍️ Writing</div>
+        <div class="filter-chip" onclick="setFilter('Data')">📊 Data & AI</div>
+      </div>
+
+      <div class="jobs-grid" id="jobsGrid"></div>
+    </section>
+  </div>
+
+  <!-- FREELANCERS SECTION -->
+  <div id="section-freelancers" style="display:none">
+    <section class="section" style="margin-top:32px">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Top Freelancers</div>
+          <div class="section-sub">Verified Bitcoin wallet holders, on-chain reputation</div>
+        </div>
+      </div>
+      <div class="freelancers-grid" id="freelancersGrid"></div>
+    </section>
+  </div>
+
+  <!-- DASHBOARD SECTION -->
+  <div id="section-dashboard" style="display:none">
+    <section class="section" style="margin-top:32px">
+      <div class="section-title" style="margin-bottom:24px">My Dashboard</div>
+      <div id="dashNotConnected" style="text-align:center; padding:60px 0; color:var(--text3)">
+        <div style="font-size:48px;margin-bottom:16px">🔒</div>
+        <div style="font-size:18px; font-weight:600; color:var(--text); margin-bottom:8px">Connect Your Wallet</div>
+        <div style="margin-bottom:24px">Connect your OP_NET or Bitcoin wallet to see your dashboard</div>
+        <button class="btn-primary" onclick="openWalletModal()">Connect Wallet</button>
+      </div>
+      <div id="dashConnected" style="display:none">
+        <div class="dashboard-grid">
+          <div class="dash-card">
+            <div class="dash-val">₿ 0.042</div>
+            <div class="dash-label">Total Earnings</div>
+            <div class="dash-change">↑ +0.008 this week</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-val">3</div>
+            <div class="dash-label">Active Contracts</div>
+            <div class="dash-change">↑ 2 new this month</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-val">₿ 0.018</div>
+            <div class="dash-label">In Escrow</div>
+            <div class="dash-change">Locked in smart contract</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-val">4.9 ⭐</div>
+            <div class="dash-label">Reputation Score</div>
+            <div class="dash-change">12 reviews on-chain</div>
+          </div>
+        </div>
+        <div class="tabs">
+          <div class="tab active">Active Jobs</div>
+          <div class="tab">My Applications</div>
+          <div class="tab">Payments</div>
+        </div>
+        <div class="jobs-grid" id="myJobsGrid"></div>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<!-- WALLET MODAL -->
+<div class="modal-overlay" id="walletModal">
+  <div class="wallet-modal">
+    <button class="modal-close" onclick="closeModal('walletModal')">✕</button>
+    <div id="walletConnectView">
+      <div class="modal-title">Connect Wallet</div>
+      <div class="modal-sub">Choose your Bitcoin or OP_NET compatible wallet</div>
+
+      <div class="wallet-option" onclick="connectWallet('opwallet')">
+        <div class="wallet-option-icon" style="background:linear-gradient(135deg,#f7931a22,#ff6b0022)">🟠</div>
+        <div class="wallet-option-info">
+          <div class="wallet-option-name">OP_WALLET</div>
+          <div class="wallet-option-desc">Native OP_NET wallet with smart contract support</div>
+        </div>
+        <div class="wallet-option-badge">Recommended</div>
+      </div>
+
+      <div class="wallet-option" onclick="connectWallet('unisat')">
+        <div class="wallet-option-icon" style="background:rgba(77,166,255,0.08)">💙</div>
+        <div class="wallet-option-info">
+          <div class="wallet-option-name">UniSat Wallet</div>
+          <div class="wallet-option-desc">Popular Bitcoin wallet with Taproot support</div>
+        </div>
+        <div class="wallet-option-badge new">BTC</div>
+      </div>
+
+      <div class="wallet-option" onclick="connectWallet('xverse')">
+        <div class="wallet-option-icon" style="background:rgba(180,88,255,0.08)">🔮</div>
+        <div class="wallet-option-info">
+          <div class="wallet-option-name">Xverse Wallet</div>
+          <div class="wallet-option-desc">Bitcoin & Stacks wallet, supports BRC-20</div>
+        </div>
+      </div>
+
+      <div class="wallet-option" onclick="connectWallet('okx')">
+        <div class="wallet-option-icon" style="background:rgba(0,208,132,0.08)">⬛</div>
+        <div class="wallet-option-info">
+          <div class="wallet-option-name">OKX Wallet</div>
+          <div class="wallet-option-desc">Multi-chain wallet with Bitcoin support</div>
+        </div>
+      </div>
+
+      <div class="modal-divider">or use address directly</div>
+
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="manualAddress" placeholder="Enter Bitcoin / Taproot address..." style="flex:1"/>
+        <button class="btn-primary" style="padding:12px 18px;white-space:nowrap" onclick="connectManual()">Connect</button>
+      </div>
+    </div>
+
+    <div id="walletConnectedView" style="display:none">
+      <div class="modal-title">Wallet Connected ✓</div>
+      <div class="modal-sub">You're connected to OPWork via Bitcoin</div>
+      <div class="wallet-connected-info">
+        <div class="wallet-dot" style="display:inline-block;margin-right:6px"></div>
+        <span style="font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase">Connected Address</span>
+        <div class="wallet-address-display" id="connectedAddress">—</div>
+        <div class="wallet-balance-display">
+          <div>
+            <div class="bal-label">BTC Balance</div>
+            <div class="bal-val" id="connectedBalance">0.00000000</div>
+          </div>
+          <div style="text-align:right">
+            <div class="bal-label">Network</div>
+            <div style="font-size:13px;color:var(--accent);font-weight:600">OP_NET Mainnet</div>
+          </div>
+        </div>
+      </div>
+      <div class="escrow-box">
+        <div class="escrow-title">🔐 Smart Contract Escrow Active</div>
+        <div class="escrow-desc">Payments are locked in OP_NET smart contracts. Funds are released automatically upon milestone completion — no disputes, no middlemen.</div>
+      </div>
+      <button class="btn-secondary" style="width:100%" onclick="disconnectWallet()">Disconnect Wallet</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOB DETAIL MODAL -->
+<div class="modal-overlay" id="jobModal">
+  <div class="job-modal">
+    <div class="job-modal-header">
+      <button class="modal-close" onclick="closeModal('jobModal')">✕</button>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <span class="card-category" id="jm-category"></span>
+        <span id="jm-verified"></span>
+      </div>
+      <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;margin-bottom:8px" id="jm-title"></div>
+      <div style="font-size:13px;color:var(--text3)" id="jm-posted"></div>
+    </div>
+    <div class="job-modal-body">
+      <div class="jm-pay-box">
+        <div>
+          <div class="jm-pay-amount" id="jm-amount"></div>
+          <div class="jm-pay-token" id="jm-token"></div>
+        </div>
+        <div>
+          <div class="jm-pay-type" id="jm-type"></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px" id="jm-usd"></div>
+        </div>
+      </div>
+
+      <div class="escrow-box">
+        <div class="escrow-title">🔐 OP_NET Escrow Protection</div>
+        <div class="escrow-desc">Payment is locked in a Bitcoin smart contract. Released automatically upon delivery confirmation. View contract: <span style="color:var(--accent);font-family:var(--mono);font-size:11px" id="jm-contract"></span></div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div class="section-label">Description</div>
+        <p style="font-size:14px;color:var(--text2);line-height:1.7" id="jm-desc"></p>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div class="section-label">Required Skills</div>
+        <div class="skills-list" id="jm-skills"></div>
+      </div>
+
+      <div>
+        <div class="section-label">Client</div>
+        <div class="client-info-box">
+          <div class="client-row">
+            <div class="client-avatar-sm" id="jm-client-avatar" style="background:var(--bg3)"></div>
+            <div>
+              <div class="client-name-sm" id="jm-client-name"></div>
+              <div class="client-meta-sm" id="jm-client-meta"></div>
+            </div>
+          </div>
+          <div class="tx-address">
+            <span id="jm-client-addr"></span>
+            <button class="copy-btn" onclick="copyAddr()">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="job-modal-footer">
+      <button class="btn-primary" style="flex:1" onclick="applyToJob()">Apply Now — Requires Wallet</button>
+      <button class="btn-secondary" onclick="closeModal('jobModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- POST JOB MODAL -->
+<div class="modal-overlay" id="postJobModal">
+  <div class="post-job-modal">
+    <div class="job-modal-header" style="background:var(--surface2)">
+      <button class="modal-close" onclick="closeModal('postJobModal')">✕</button>
+      <div class="modal-title">Post a New Job</div>
+      <div class="modal-sub">Payment secured by OP_NET Bitcoin smart contract</div>
+    </div>
+    <div class="job-modal-body">
+      <div class="form-group">
+        <label class="form-label">Job Title</label>
+        <input class="form-input" id="pj-title" placeholder="e.g. Build OP_20 Token Staking Contract" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="pj-category">
+            <option>Development</option>
+            <option>Design</option>
+            <option>Marketing</option>
+            <option>Writing</option>
+            <option>Data</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Job Type</label>
+          <select class="form-select" id="pj-type">
+            <option>Fixed Price</option>
+            <option>Hourly</option>
+            <option>Milestone</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="pj-desc" placeholder="Describe your project in detail..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Budget / Rate</label>
+        <div class="token-input-wrap">
+          <input class="form-input" id="pj-budget" type="number" placeholder="0.00" />
+          <select class="token-select" id="pj-token">
+            <option value="BTC">BTC</option>
+            <option value="OP_20">OP_20</option>
+            <option value="PILL">PILL</option>
+            <option value="sats">sats</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Required Skills (comma separated)</label>
+        <input class="form-input" id="pj-skills" placeholder="e.g. Solidity, Bitcoin, React, TypeScript" />
+      </div>
+      <div class="escrow-box">
+        <div class="escrow-title">ℹ️ How Escrow Works</div>
+        <div class="escrow-desc">When you post, you'll be prompted to lock the payment into an OP_NET smart contract. The funds are only released when you confirm delivery — protecting both parties.</div>
+      </div>
+    </div>
+    <div class="job-modal-footer">
+      <button class="btn-primary" style="flex:1" onclick="submitJob()">Post & Lock Escrow →</button>
+      <button class="btn-secondary" onclick="closeModal('postJobModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon">✓</span>
+  <span id="toast-msg">Message</span>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const JOBS = [
+  {id:1, title:"Build OP_20 Token Staking Smart Contract", category:"Development", catClass:"cat-dev",
+   desc:"We need an experienced Bitcoin/OP_NET developer to build a staking contract for our OP_20 governance token. Must support lock periods, reward distribution, and emergency withdrawal.",
+   tags:["AssemblyScript","OP_NET","Bitcoin","DeFi"],
+   amount:"0.85", token:"BTC", usd:"~$54,400", type:"Fixed Price",
+   client:{name:"Motoswap Protocol",meta:"20 jobs posted · $142k spent",addr:"bc1p9x2a...",avatar:"M",color:"#f7931a22"},
+   time:"2 hours ago", proposals:12, verified:true, contract:"0x4f2a..9b3c"},
+  {id:2, title:"Web3 Frontend for Bitcoin NFT Marketplace", category:"Development", catClass:"cat-dev",
+   desc:"Looking for a React developer with Web3 experience to build a clean NFT marketplace UI that connects to OP_NET smart contracts. Must have wallet connection and transaction signing.",
+   tags:["React","TypeScript","OP_NET","Web3"],
+   amount:"0.42", token:"BTC", usd:"~$26,880", type:"Fixed Price",
+   client:{name:"OrangePill Labs",meta:"8 jobs posted · $38k spent",addr:"bc1p7m3z...",avatar:"O",color:"#ff6b0022"},
+   time:"5 hours ago", proposals:7, verified:true, contract:"0x8a1b..2d4e"},
+  {id:3, title:"Bitcoin Brand Identity & Logo Design", category:"Design", catClass:"cat-design",
+   desc:"Design a complete brand identity for a new Bitcoin-native DeFi protocol. Includes logo, color palette, typography, and basic UI components kit in Figma.",
+   tags:["Figma","Branding","UI/UX","Web3"],
+   amount:"50,000", token:"PILL", usd:"~$8,200", type:"Fixed Price",
+   client:{name:"PillDAO",meta:"3 jobs posted · $22k spent",addr:"bc1pqr5t...",avatar:"P",color:"#b458ff22"},
+   time:"1 day ago", proposals:4, verified:false, contract:"0xcc3d..7f1a"},
+  {id:4, title:"Write 10 Technical Articles About OP_NET", category:"Writing", catClass:"cat-writing",
+   desc:"We need a technical writer with deep crypto knowledge to produce 10 long-form articles (2000+ words each) explaining OP_NET's smart contract architecture, use cases, and ecosystem.",
+   tags:["Technical Writing","Crypto","Bitcoin","OP_NET"],
+   amount:"0.12", token:"BTC", usd:"~$7,680", type:"Fixed Price",
+   client:{name:"Satoshi Weekly",meta:"15 jobs posted · $67k spent",addr:"bc1p8k2j...",avatar:"S",color:"#00d08422"},
+   time:"3 hours ago", proposals:9, verified:true, contract:"0x5e7f..0a2b"},
+  {id:5, title:"On-chain Data Analytics Dashboard", category:"Data", catClass:"cat-data",
+   desc:"Build a real-time analytics dashboard using OP_NET's API and MCP protocol to track token transfers, smart contract interactions, and wallet activity. React + D3.js preferred.",
+   tags:["Data Viz","React","D3.js","OP_NET API"],
+   amount:"250,000", token:"sats", usd:"~$15,600", type:"Milestone",
+   client:{name:"ChainScope",meta:"5 jobs posted · $29k spent",addr:"bc1p3x7y...",avatar:"C",color:"#4da6ff22"},
+   time:"6 hours ago", proposals:5, verified:true, contract:"0x2c9e..5b8d"},
+  {id:6, title:"DeFi Marketing Campaign — Bitcoin L1", category:"Marketing", catClass:"cat-marketing",
+   desc:"Lead a 3-month marketing campaign for our new OP_NET-based DEX. Strategy, content, community management, Twitter/X growth, and influencer partnerships required.",
+   tags:["Marketing","Crypto","Community","Growth"],
+   amount:"0.28", token:"BTC", usd:"~$17,920", type:"Hourly",
+   client:{name:"MotoSwap DEX",meta:"11 jobs posted · $88k spent",addr:"bc1p5n2m...",avatar:"M",color:"#f7931a22"},
+   time:"12 hours ago", proposals:18, verified:true, contract:"0x9d4a..3c6f"},
+];
+
+const FREELANCERS = [
+  {name:"Satoshi Dev",title:"Bitcoin Smart Contract Engineer",rate:"0.08",rateUnit:"BTC/hr",rating:5.0,jobs:24,earned:"₿ 3.2",tags:["OP_NET","AssemblyScript","DeFi"],addr:"bc1p9xz...",avatar:"S",color:"#f7931a"},
+  {name:"Alice Chain",title:"Web3 Frontend Developer",rate:"0.04",rateUnit:"BTC/hr",rating:4.9,jobs:18,earned:"₿ 1.8",tags:["React","TypeScript","Web3"],addr:"bc1pq7m...",avatar:"A",color:"#4da6ff"},
+  {name:"BitArtist",title:"Crypto Brand Designer",rate:"0.03",rateUnit:"BTC/hr",rating:4.8,jobs:31,earned:"₿ 2.4",tags:["Figma","UI/UX","NFT"],addr:"bc1p3xk...",avatar:"B",color:"#b458ff"},
+  {name:"HashWriter",title:"Technical Crypto Writer",rate:"0.02",rateUnit:"BTC/hr",rating:5.0,jobs:42,earned:"₿ 1.1",tags:["Writing","OP_NET","DeFi"],addr:"bc1p8nl...",avatar:"H",color:"#00d084"},
+  {name:"OrdinalMax",title:"Bitcoin Protocol Developer",rate:"0.10",rateUnit:"BTC/hr",rating:4.7,jobs:9,earned:"₿ 5.1",tags:["Bitcoin","OP_NET","Rust"],addr:"bc1p2sk...",avatar:"O",color:"#ff6b00"},
+  {name:"DataNaka",title:"Blockchain Data Engineer",rate:"0.05",rateUnit:"BTC/hr",rating:4.9,jobs:15,earned:"₿ 2.2",tags:["Python","Analytics","OP_NET"],addr:"bc1prtx...",avatar:"D",color:"#ff4d4d"},
+];
+
+const FEED_EVENTS = [
+  {text:"<strong>Satoshi Dev</strong> completed a job", amount:"0.085 BTC", color:"#f7931a"},
+  {text:"<strong>Alice Chain</strong> was hired for Web3 Frontend", amount:"0.042 BTC", color:"#4da6ff"},
+  {text:"New milestone unlocked by <strong>BitArtist</strong>", amount:"0.020 BTC", color:"#b458ff"},
+  {text:"<strong>HashWriter</strong> applied to writing job", amount:"—", color:"#00d084"},
+  {text:"Escrow released to <strong>OrdinalMax</strong>", amount:"0.850 BTC", color:"#ff6b00"},
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let walletState = { connected: false, address: '', balance: '0.00000000', type: '' };
+let currentFilter = 'All';
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function renderJobs(jobs) {
+  const grid = document.getElementById('jobsGrid');
+  grid.innerHTML = jobs.map(j => `
+    <div class="job-card" onclick="openJobModal(${j.id})">
+      <div class="card-header">
+        <span class="card-category ${j.catClass}">${j.category}</span>
+        ${j.verified ? '<span class="card-verified">✓ Verified Client</span>' : ''}
+      </div>
+      <div class="card-title">${j.title}</div>
+      <div class="card-desc">${j.desc}</div>
+      <div class="card-tags">${j.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="card-footer">
+        <div class="card-pay">
+          <span class="pay-amount">${j.amount}</span>
+          <span class="pay-unit"> ${j.token}</span>
+          <span class="pay-usd">${j.usd}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--text3)">${j.proposals} proposals</span>
+          <button class="apply-btn" onclick="event.stopPropagation();openJobModal(${j.id})">Apply</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderFreelancers() {
+  const grid = document.getElementById('freelancersGrid');
+  grid.innerHTML = FREELANCERS.map(f => `
+    <div class="freelancer-card">
+      <div class="fl-avatar" style="background:${f.color}22;color:${f.color}">${f.avatar}</div>
+      <div class="fl-name">${f.name}</div>
+      <div class="fl-title">${f.title}</div>
+      <div class="fl-rate">${f.rate} <span class="fl-rate-label">${f.rateUnit}</span></div>
+      <div class="fl-stats">
+        <div><div class="fl-stat-val fl-rating">${f.rating}⭐</div><div class="fl-stat-label">Rating</div></div>
+        <div><div class="fl-stat-val">${f.jobs}</div><div class="fl-stat-label">Jobs</div></div>
+        <div><div class="fl-stat-val" style="color:var(--accent)">${f.earned}</div><div class="fl-stat-label">Earned</div></div>
+      </div>
+      <div class="fl-tags">${f.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="btc-address">${f.addr}</div>
+    </div>
+  `).join('');
+}
+
+function renderLiveFeed() {
+  const feed = document.getElementById('liveFeed');
+  const colors = ["#f7931a","#4da6ff","#b458ff","#00d084","#ff6b00"];
+  const emojis = ["⚡","✓","🔐","📝","💸"];
+  feed.innerHTML = FEED_EVENTS.map((e,i) => `
+    <div class="feed-item">
+      <div class="feed-avatar" style="background:${e.color}22;color:${e.color}">${emojis[i]}</div>
+      <div class="feed-text">${e.text}</div>
+      ${e.amount !== '—' ? `<div class="feed-amount">${e.amount}</div>` : ''}
+    </div>
+  `).join('');
+  // Animate feed items periodically
+  setInterval(() => {
+    const items = feed.querySelectorAll('.feed-item');
+    if (items.length > 0) {
+      const last = items[items.length-1];
+      last.style.opacity = '0';
+      setTimeout(() => last.remove(), 300);
+      const rand = FEED_EVENTS[Math.floor(Math.random()*FEED_EVENTS.length)];
+      const div = document.createElement('div');
+      div.className = 'feed-item';
+      div.style.opacity = '0';
+      div.innerHTML = `<div class="feed-avatar" style="background:${rand.color}22;color:${rand.color}">⚡</div>
+        <div class="feed-text">${rand.text}</div>
+        ${rand.amount !== '—' ? `<div class="feed-amount">${rand.amount}</div>` : ''}`;
+      feed.insertBefore(div, feed.firstChild);
+      setTimeout(() => div.style.opacity = '1', 50);
+    }
+  }, 3500);
+}
+
+// ─────────────────────────────────────────────
+// FILTERS
+// ─────────────────────────────────────────────
+function setFilter(cat) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  filterJobs();
+}
+function filterJobs() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = JOBS.filter(j => {
+    const matchCat = currentFilter === 'All' || j.category === currentFilter;
+    const matchQ = !q || j.title.toLowerCase().includes(q) || j.desc.toLowerCase().includes(q) || j.tags.some(t=>t.toLowerCase().includes(q));
+    return matchCat && matchQ;
+  });
+  renderJobs(filtered);
+}
+
+// ─────────────────────────────────────────────
+// SECTIONS
+// ─────────────────────────────────────────────
+function showSection(name) {
+  ['browse','freelancers','dashboard'].forEach(s => {
+    document.getElementById(`section-${s}`).style.display = s===name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-links a').forEach((a,i) => {
+    a.classList.toggle('active', ['browse','freelancers','dashboard'][i] === name);
+  });
+  if (name === 'dashboard' && walletState.connected) {
+    document.getElementById('dashNotConnected').style.display = 'none';
+    document.getElementById('dashConnected').style.display = 'block';
+    renderJobs(JOBS.slice(0,2));
+    setTimeout(() => document.getElementById('myJobsGrid') && (document.getElementById('myJobsGrid').innerHTML = document.getElementById('jobsGrid').innerHTML), 10);
+  }
+}
+
+// ─────────────────────────────────────────────
+// MODALS
+// ─────────────────────────────────────────────
+function openWalletModal() {
+  if (walletState.connected) {
+    document.getElementById('walletConnectView').style.display = 'none';
+    document.getElementById('walletConnectedView').style.display = 'block';
+    document.getElementById('connectedAddress').textContent = walletState.address;
+    document.getElementById('connectedBalance').textContent = walletState.balance + ' BTC';
+  } else {
+    document.getElementById('walletConnectView').style.display = 'block';
+    document.getElementById('walletConnectedView').style.display = 'none';
+  }
+  document.getElementById('walletModal').classList.add('show');
+}
+
+function openJobModal(id) {
+  const j = JOBS.find(x=>x.id===id);
+  if (!j) return;
+  document.getElementById('jm-category').className = `card-category ${j.catClass}`;
+  document.getElementById('jm-category').textContent = j.category;
+  document.getElementById('jm-verified').innerHTML = j.verified ? '<span class="card-verified">✓ Verified</span>' : '';
+  document.getElementById('jm-title').textContent = j.title;
+  document.getElementById('jm-posted').textContent = `Posted ${j.time} · ${j.proposals} proposals`;
+  document.getElementById('jm-amount').textContent = j.amount;
+  document.getElementById('jm-token').textContent = j.token + ' · ' + j.usd;
+  document.getElementById('jm-type').textContent = j.type;
+  document.getElementById('jm-usd').textContent = j.usd;
+  document.getElementById('jm-desc').textContent = j.desc;
+  document.getElementById('jm-contract').textContent = j.contract;
+  document.getElementById('jm-skills').innerHTML = j.tags.map(t=>`<span class="skill-tag">${t}</span>`).join('');
+  document.getElementById('jm-client-avatar').textContent = j.client.avatar;
+  document.getElementById('jm-client-avatar').style.background = j.client.color;
+  document.getElementById('jm-client-name').textContent = j.client.name;
+  document.getElementById('jm-client-meta').textContent = j.client.meta;
+  document.getElementById('jm-client-addr').textContent = j.client.addr;
+  document.getElementById('jobModal').classList.add('show');
+}
+
+function openPostJobModal() {
+  document.getElementById('postJobModal').classList.add('show');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if(e.target===el) closeModal(el.id); });
+});
+
+// ─────────────────────────────────────────────
+// WALLET LOGIC (simulated OP_NET integration)
+// ─────────────────────────────────────────────
+function connectWallet(type) {
+  const walletNames = { opwallet:'OP_WALLET', unisat:'UniSat', xverse:'Xverse', okx:'OKX' };
+  // Simulate wallet connection (real integration via window.opnet / window.unisat)
+  const mockAddr = generateMockAddress();
+  const mockBal = (Math.random() * 0.5 + 0.001).toFixed(8);
+  walletState = { connected: true, address: mockAddr, balance: mockBal, type };
+  updateWalletUI();
+  closeModal('walletModal');
+  showToast(`✓`, `${walletNames[type]} connected successfully!`);
+  // Update dashboard if open
+  if (document.getElementById('section-dashboard').style.display !== 'none') {
+    document.getElementById('dashNotConnected').style.display = 'none';
+    document.getElementById('dashConnected').style.display = 'block';
+  }
+}
+
+function connectManual() {
+  const addr = document.getElementById('manualAddress').value.trim();
+  if (!addr || addr.length < 20) { showToast('⚠️','Please enter a valid Bitcoin address'); return; }
+  walletState = { connected: true, address: addr, balance: '0.00000000', type: 'manual' };
+  updateWalletUI();
+  closeModal('walletModal');
+  showToast('✓','Wallet address connected!');
+}
+
+function disconnectWallet() {
+  walletState = { connected: false, address: '', balance: '0.00000000', type: '' };
+  updateWalletUI();
+  closeModal('walletModal');
+  showToast('ℹ️','Wallet disconnected');
+}
+
+function updateWalletUI() {
+  const btn = document.getElementById('walletBtn');
+  if (walletState.connected) {
+    const short = walletState.address.slice(0,6)+'...'+walletState.address.slice(-4);
+    btn.innerHTML = `<span class="wallet-dot"></span>${short}`;
+    btn.className = 'wallet-btn connected';
+  } else {
+    btn.innerHTML = '<span>🔗</span> Connect Wallet';
+    btn.className = 'wallet-btn disconnected';
+  }
+}
+
+function generateMockAddress() {
+  const chars = '0123456789abcdef';
+  let addr = 'bc1p';
+  for(let i=0;i<38;i++) addr += chars[Math.floor(Math.random()*chars.length)];
+  return addr;
+}
+
+// ─────────────────────────────────────────────
+// APPLY
+// ─────────────────────────────────────────────
+function applyToJob() {
+  if (!walletState.connected) {
+    closeModal('jobModal');
+    openWalletModal();
+    return;
+  }
+  closeModal('jobModal');
+  showToast('🚀', 'Application submitted! Client will contact you on-chain.');
+}
+
+// ─────────────────────────────────────────────
+// POST JOB
+// ─────────────────────────────────────────────
+function submitJob() {
+  if (!walletState.connected) {
+    closeModal('postJobModal');
+    openWalletModal();
+    return;
+  }
+  const title = document.getElementById('pj-title').value;
+  if (!title) { showToast('⚠️','Please fill in the job title'); return; }
+  closeModal('postJobModal');
+  showToast('🔐', 'Job posted! Escrow locked in OP_NET smart contract.');
+}
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+function copyAddr() {
+  const addr = document.getElementById('jm-client-addr').textContent;
+  navigator.clipboard.writeText(addr).catch(()=>{});
+  showToast('📋','Address copied to clipboard');
+}
+
+let toastTimer;
+function showToast(icon, msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+renderJobs(JOBS);
+renderFreelancers();
+renderLiveFeed();
+</script>
+</body>
+</html>
